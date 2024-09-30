@@ -18,8 +18,21 @@
                 "source": true
               }
             }
+          },
+          {
+            "id": "772d0d8b457297fb",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Kotlin/01-kotlin-basics-types.md",
+                "mode": "source",
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -85,7 +98,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "README.md",
+                "file": "Kotlin/01-kotlin-basics-types.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -102,7 +115,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "README.md",
+                "file": "Kotlin/01-kotlin-basics-types.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -125,7 +138,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "README.md"
+                "file": "Kotlin/01-kotlin-basics-types.md"
               }
             }
           }
@@ -146,8 +159,10 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "5e34bf15a6107eba",
+  "active": "772d0d8b457297fb",
   "lastOpenFiles": [
+    "README.md",
+    "Kotlin/01-kotlin-basics-types.md",
     "KotlinMultiplatform",
     "Android",
     "Kotlin"
