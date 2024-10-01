@@ -1,20 +1,20 @@
 ## Control Flow
 ### Conditions and Loops
 
-- In Kotlin, the `if` is an expression that returns a value. therefore, there is no ternary operator.
+- In Kotlin, there is no ternary operator.  `if-else` can be used in the place of ternary operator as `if` returns a value in Kotlin.
   
   ```
   max = if (a > b) a else b
   ```
   
-- If you are using `if` for returninng a value or assigning it to a variable, then the `else' block is mandatory.
+- If you are using `if` for returning a value or assigning it to a variable, then the `else` block is mandatory.
 
 #### When Expression
 - It has conditions with multiple branches. It is similar to `switch` statement.
 - `when` can be used either as an expressions or statement.
 - An expression produced a value whereas statement performs an action.
 - If it is used as an expression, the value of the first matching branch becomes the value of the overall expression. If it is used as a statement, the values of individual branches are ignored.
-- If `when` is used as an expression, the else branch is mandatory uncless the compiler matches all the conditions.
+- If `when` is used as an expression, the else branch is mandatory unless the compiler matches all the conditions.
   ```
   enum class Bit {
     ZERO, ONE
@@ -69,12 +69,6 @@
   ```
 
 ##### If you want to iterate through an array or a list with an index, you can do it this way:
-```
-for (i in array.indices) {
-    println(array[i])
-}
-```
-
 ```
 for (i in array.indices) {
     println(array[i])

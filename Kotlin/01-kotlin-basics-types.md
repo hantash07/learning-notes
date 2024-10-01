@@ -12,8 +12,9 @@ println("There are $customers customers")
 
 ### Data Types
 ##### In Kotlin, everything is an object. Each type has it's own member functions and properties.
+
 #### Type Inference
-Kotlin has the ability to infer or conclude the type of the variable. When a varaiable is assigned a value based on that value the type is defined.
+Kotlin has the ability to define the type of a variable. When a variable is assigned a value then the type is defined.
 
 #### Kotlin has the following basic types:
 1. Integers  -  `Byte, Short, Int, Long`
@@ -23,7 +24,7 @@ Kotlin has the ability to infer or conclude the type of the variable. When a var
 5. Characters  -  `Char`
 6. Strings  -  `String`
 
-- When you initialize a variable with no explicit type specification, the compiler automatically infers the type with the smallest range enough to represent the value. If it is not exceeding the range of Int, the type is Int. If it exceeds, the type is Long. To specify the Long value explicitly, append the suffix L to the value. Same method applied for Double and Float.
+- When you initialized a variable with no explicit type specification, the compiler automatically infers the type with the smallest range enough to represent the value. If it is not exceeding the range of Int, the type is Int. If it exceeds, the type is Long. To specify the Long value explicitly, append the suffix L to the value. Same method applied for Double and Float.
 
   ```
   val one = 1 // Int
@@ -70,7 +71,7 @@ Fixed value that does not changed during program execution.
 - On the JVM platform, numbers are stored as primitive types: int, double, and so on. Exceptions are cases when you create a nullable number reference such as Int? or use generics. In these cases numbers are boxed in Java classes Integer, Double, and so on.
 
 #### Explicit Number Conversions
-As a consequence, smaller types are NOT implicitly converted to bigger types. This means that assigning a value of type Byte to an Int variable requires an explicit conversion:
+In Kotlin, numbers are not implicitly converted. Smaller types are NOT implicitly converted to bigger types. This means that assigning a value of type Byte to an Int variable requires an explicit conversion:
 
 ```
 val b: Byte = 1 // OK, literals are checked statically
@@ -106,7 +107,7 @@ println(x == 2.5)
 ```
 
 #### String
-Strings are immutable. Once you initialize a string, you can't change its value or assign a new value to it. All operations that transform strings return their results in a new String object, leaving the original string unchanged:
+Strings are immutable. Once you initialised a string, you can't change its value or assign a new value to it. All operations that transform strings return their results in a new String object, leaving the original string unchanged:
 ```
 val str = "abcd"
 println(str.uppercase()) // Create and print a new String object
@@ -117,19 +118,22 @@ Kotlin has two types of String Literals:
 1. Escape String 
 2. Raw String
 
-##### Escaped String
-A string that contain escaped characters. Escaped characters are thoes that start with backlash `\`.
+##### Escape String
+- A string that contain special characters. Escaped characters are those that start with backlash `\`.
+- It is used when you need to include special characters in a string.
 ```
 val s = "Hello, world!\n"
 ```
 
 ##### Raw String
-It contain newlines and arbitrary text. It is delimited by a triple quote ("""), contains no escaping and can contain newlines and any other characters:
+- In Kotlin it is created by using triple quote ("""). 
+- It ignores the escape string (special characters) and print the string as it is.
+- Use this string if you want the string to be printed exactly as written
 ```
-val text = """
-    for (c in "foo")
-        print(c)
-"""
+val rawString = """Hello\nWorld! "Kotlin" is awesome."""
+println(rawString)
+
+Output: Hello\nWorld! "Kotlin" is awesome.
 ```
 
 #### Array
