@@ -17,7 +17,7 @@
 #### Primary Constructor
 - If the primary constructor does not have any annotations or visibility modifiers, the constructor keyword can be removed.
 - This constructor cannot contain runnable code. If you want to run a code during object creation use the `init` block
-- During the initialisation of an instance, the initializer blocks `init` are executed in the same order as they appear in the class body.
+- After the initialisation of an instance, the initializer blocks `init` are executed in the same order as they appear in the class body.
 ```
 class InitOrderDemo(name: String) {
     val firstProperty = "First property: $name".also(::println)
@@ -68,7 +68,7 @@ class Customer public @Inject constructor(name: String) { /*...*/ }
   }
   ```
 
-- The code inside `init` blocks and property initializer are executed before the secondary constructor. As we know that `init` block is executed during object creation and object creation is done using primary constructor. In short `init` block become the part of primary constructor and it is executed before secondary constructor. 
+- The code inside `init` blocks and property initializer are executed before the secondary constructor. As we know that `init` block is executed right after object creation and object creation is done using primary constructor. In short `init` block become the part of primary constructor and it is executed before secondary constructor. 
 - Even if the class has no primary constructor, the delegation still happens implicitly, and the initializer blocks are still executed.
 
 - If a non-abstract or concrete class does not declare any constructors (primary or secondary), it will have a generated primary constructor with no arguments. The visibility of the constructor will be public.
