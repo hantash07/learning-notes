@@ -143,7 +143,7 @@ Output:
 Moved point: (4, 2)
 ```
 
-### Built-in Infix Functions in Kotlin
+#### Built-in Infix Functions in Kotlin
 - **`to` (for creating pairs)**:
 ```
 val pair = "key" to "value" // Equivalent to Pair("key", "value")
