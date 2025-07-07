@@ -52,6 +52,75 @@ flowOf(1, 2, 3, 4)
     .collect { println(it) } // 3, 4
 ```
 
+
+### Combine, Zip, and Merge Operators
+- These operators are used to work with multiple flows.
+
+####  1. `combine`
+- It waits for at least one value to be emitted from any combined flows. 
+- In simple words, if there are any changes in any of the flows, the `combine` function executes.
+- Example:  The **login button** should only be enabled when both email and password are valid.
+```
+val emailFlow = MutableStateFlow("")
+val passwordFlow = MutableStateFlow("")
+
+val isLoginEnabled = combine(emailFlow, passwordFlow) { email, password ->
+    email.contains("@") && password.length >= 6
+}
+
+isLoginEnabled.onEach { enabled ->
+    // Update UI button state
+    loginButton.isEnabled = enabled
+}.launchIn(lifecycleScope)
+```
+- Emits **immediately** when either input changes.
+
+####  2. `zip`
+- It waits for the emissions of all the flows.
+- In simple words, if there are two flows zipped, the `zip` function will execute if both the flows change.
+- Example: You make two network calls: One fetches **user data**, and the other fetches **user preferences**. Then combine them into a `UserProfile` object.
+```
+val userFlow = flow { emit(api.getUser()) }
+val prefsFlow = flow { emit(api.getUserPreferences()) }
+
+val profileFlow = userFlow.zip(prefsFlow) { user, prefs ->
+    UserProfile(user, prefs)
+}
+
+profileFlow.onEach { profile ->
+    // Update UI with user profile
+    showProfile(profile)
+}.launchIn(viewModelScope)
+```
+
+####  3. `merge`
+- With `combine` and `zip`, we can combine values from the values returned. But in merge, it does not combine values. 
+- The `merge` functions get called whenever there are any changes from the flows, but the values returned cannot be combined.
+- Example:
+```
+val uiEvents = flow {
+    emit("UI clicked button A")
+    delay(500)
+    emit("UI clicked button B")
+}
+
+val systemEvents = flow {
+    delay(300)
+    emit("Battery low")
+}
+
+val apiEvents = flow {
+    delay(100)
+    emit("API returned error 404")
+}
+
+val allEvents = merge(uiEvents, systemEvents, apiEvents)
+
+allEvents.onEach { event ->
+    Log.d("AppEvents", event)
+}.launchIn(viewModelScope)
+```
+
 ### Terminal Flow Operator
 - It takes all the results of the flow and terminates it.
 #### 1. **`count`**
@@ -77,7 +146,6 @@ Similar to `reduce`, but with an initial value.
 flowOf(1, 2, 3)
 	.fold(10) { acc, value -> acc + value } // 16
 ```
-
 
 ### Flattering Operator
 - In Kotlin Flow, flattening operators are used to handle flows of flows (nested flows).
