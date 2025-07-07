@@ -29,7 +29,7 @@ flowOf(1, 2)
 ```
 
 #### 4.  `distinctUntilChanged`
-Avoids emitting the same value consecutively.
+- Avoids emitting the same value consecutively.
 ```
 flowOf(1, 1, 2, 2, 3)
     .distinctUntilChanged()
@@ -81,6 +81,7 @@ flowOf(1, 2, 3)
 
 ### Flattering Operator
 - In Kotlin Flow, flattening operators are used to handle flows of flows (nested flows).
+- In simple words, if you want to emit another flow from the initial flow, then these operators are used.
 - When the emission itself is a flow, and you want to combine or merge it into a single flow.
 - Imagine you have:
 ```
@@ -92,7 +93,7 @@ Flow<T>
 ```
 #### 1.  `flatMapConcat` 
 - It executes the inner flow in a sequential manner, in the order they are emitted.
-- Use case Example: Step-by-step tasks like chained calls
+- Use case Example: Step-by-step tasks like chained calls. Getting the product ID, then calling an api which returns the details about the product.
 ```
 val numbers = (1..3).asFlow()
 
@@ -214,7 +215,7 @@ Collected 0
 Collected 1
 Collected 2
 ```
-- Without `buffer()`, producer would **wait** on each `collect` to finish.
+- Without a `buffer()`, the producer would **wait** on each `collect` to finish.
 #### 1.  `conflate` 
 - **Skips intermediate emissions** if the collector is slow.
 - Keeps only the **latest value**.
