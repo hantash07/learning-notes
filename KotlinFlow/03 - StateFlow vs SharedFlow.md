@@ -10,6 +10,7 @@
 - Always has a current value.
 - An initial value is required.
 - A **hot** flow that emits values even if no one is collecting it.
+- If you only care about the latest emissions, use StateFlow
 - Example:
 ```
 val _counter = MutableStateFlow(0)
@@ -40,6 +41,7 @@ lifecycleScope.launch {
 - Unlike `StateFlow`, which holds a single state, `SharedFlow` can emit **a stream of values**, and multiple collectors can observe and **receive these emissions in real time**.
 - All active collectors receive values
 - Unlike `StateFlow`, it doesn’t hold a default value
+- If you care about all emissions (new and previous), then use SharedFlow
 - Use case: Toasts/snackbars, Navigation events, and One-shot actions
 - Example:
 ```

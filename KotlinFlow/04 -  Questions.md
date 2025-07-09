@@ -1,5 +1,5 @@
 
-### Why don't we use LiveData instead of Kotlin Flow?
+### 1. Why don't we use LiveData instead of Kotlin Flow?
 - Kotlin Flow and LiveData serve similar purposes in Android. The main difference is that Kotlin Flow is more powerful, coroutine-based, and platform-independent.
 - Platform-independent means that Kotlin Flow can work outside of the UI layer, and it is not Android-specific. LiveData is lifecycle-aware and can't work outside the UI layer.
 
@@ -11,9 +11,9 @@
 #### 2. Flow is more flexible and powerful
 - Both can emit multiple values.
 - Flow supports more powerful operators.
-- LiveData is only a hot stream. Flow can either be a hot or cold stream.
+- LiveData is only a hot stream. Some flows are cold, and some types are hot streams.
 - Flow can handle exceptions with `catch`
-- Flow works with advanced constructs like **channels, StateFlow, SharedFlow**, etc.
+- Flow works with advanced constructs, such as channels, StateFlow, and SharedFlow.
 
 #### 3. Lifecycle-awareness isn't always needed
 - LiveData automatically stops updating when the lifecycle is stopped — great for UI.
@@ -22,3 +22,25 @@
 #### 4. Usage
 - Use LiveData for simple UI.
 - Use Flow for Shared/business logic, advanced operations, and Multiplatform/Kotlin-only projects.
+
+### 2. Hot Flows vs. Cold Flows In Kotlin - When to Use What?
+
+#### Cold Flows
+- The flow starts emitting when the collector is available.
+- Each time you **collect**, the flow **starts over from scratch**.
+- **Each collector runs the flow independently**.
+
+#### Hot Flows
+- Even if there is no collector, the flow starts emitting immediately
+- If **multiple collectors are listening at the same time**, they’ll all receive the same emitted values from a **hot** flow, like **SharedFlow** or **StateFlow**.
+- If a collector comes **after the first emission**, it **misses "First"**.
+
+#### When to Use What?
+| Use Case                                                 | Use                               |
+| -------------------------------------------------------- | --------------------------------- |
+| **Cold stream of values** per collector                  | `flow {}`                         |
+| **UI state** that should be preserved and observed       | `StateFlow`                       |
+| **Broadcasting events** to many consumers                | `SharedFlow`                      |
+| **Single-use streams**, replaying to each                | Cold Flow                         |
+| **Debounce/search/transform input**                      | Cold Flow (`flatMapLatest`, etc.) |
+| **Progress/state sharing between screens or components** | StateFlow or SharedFlow           |
