@@ -44,3 +44,19 @@
 | **Single-use streams**, replaying to each                | Cold Flow                         |
 | **Debounce/search/transform input**                      | Cold Flow (`flatMapLatest`, etc.) |
 | **Progress/state sharing between screens or components** | StateFlow or SharedFlow           |
+
+### 3. `SharingStarted.WhileSubscribed(5000)` – What does it mean?
+
+```
+val notesStateFlow: StateFlow<List<Note>> = noteRepository.notesFlow  
+    .stateIn(  
+        viewModelScope,  
+        SharingStarted.WhileSubscribed(5000),  
+        emptyList()  
+    )
+```
+
+- stateIn() is used to convert the flow into StateFlow or SharedFlow.
+- It’s part of how `**stateIn**` and `**shareIn**` handle **when to start and stop collecting** the upstream `Flow`.
+- It keeps the state fresh and up to date when needed.
+- Practical Example: A user is on the screen and starts collecting, then the user leaves that screen. If the user comes back to that screen within 5 seconds, then the collection process will resume otherwise it will restart from fresh.
