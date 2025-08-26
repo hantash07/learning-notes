@@ -1,0 +1,221 @@
+- WorkManager is an Android Jetpack library that lets you schedule and manage background tasks that need guaranteed execution, even if the app is killed, the device restarts, or the constraints were not met at the time of scheduling.
+- It is a recommended solution for background tasks that don't need to run immediately, but are guaranteed to run no matter what happens to the device.
+- WorkManager persists scheduled work in an internal SQLite DB so it can survive process death and device reboot.
+
+### Key Features
+- Runs tasks even if the app is force-closed or after a reboot.
+- Supports **constraints** (e.g., only run when charging or on Wi-Fi).
+- Supports **one-time** and **periodic** tasks.
+- Compatible back to API 14.
+- Supports **chaining** and **parallel work** with `WorkContinuation`.
+- Can observe work states using **LiveData** or Kotlin **Flow**.
+
+### Why WorkManager Exists
+- Android has had multiple APIs for background work:
+	- **Services** → Run tasks in the background (but heavy, killed under Doze).
+	- **AlarmManager** → Schedule tasks, but not guaranteed if the device is idle.
+	- **JobScheduler** → Works from API 21+, but you still need backward compatibility.
+- WorkManager **abstracts all these APIs** and guarantees that work will **eventually run**, no matter:
+	- The app is killed
+	- Device restarts
+	- OS restrictions (Doze, battery optimizations)
+- WorkManager decides internally whether to use:
+	- `JobScheduler` (preferred, API 23+)
+	- `AlarmManager + BroadcastReceiver` (API < 23)
+	- `Firebase JobDispatcher` (legacy, no longer required)
+
+### Deferrable vs Immediate Work 
+- **Deferrable work (Non-real time)** -> Non-urgent or can be delayed. WorkManager is the best option here.
+- **Immediate work (Real-time)** -> Needs to happen now. Use a coroutine/foreground service.
+- Note: If you misuse WorkManager for real-time work, the app feels slow, wastes quota.
+
+### Types of Work Request
+#### 1. OneTimeWorkRequest
+- It runs a task and then finishes. (Runs only once)
+- It is used when you want a single background task and not for repeating tasks.
+- It can be chained with other work.
+- It can be unique work.
+- It can return `Result.success()`, `failure()`, or `retry()`.
+- Supports constraints.
+- Flex Interval not supported.
+- Useful for: Uploading a file, syncing data once, or performing a cleanup.
+```
+val request = OneTimeWorkRequestBuilder<MyWorker>().build()
+WorkManager.getInstance(context).enqueue(request)
+```
+#### 2. PeriodicWorkRequest
+- It runs a task repeatedly at a fixed interval.
+- It is used for a recurring background task. Recurring background tasks are those tasks that are required to run repeatedly on a schedule without user interaction.
+- It is not for a single task or chained jobs.
+- Runs forever at a given interval until explicitly cancelled.
+- **Minimum interval is 15 minutes** (enforced by the system).
+- **Cannot be chained** with other workers.
+- It can also be **unique**.
+- Useful for: Syncing periodically (every hour), Refreshing data (like weather updates), uploading logs in batches, or clearing cache daily.
+- Supports **flex interval** → gives system a window to optimize execution:
+	- Android does not guarantee the exact timing of work execution.
+	- Flex interval gives Android the freedom to execute work within that interval.
+	- **Flex interval must be ≤ repeat interval**.
+	- If not specified, default **flex interval = 5 minutes** (for 15-minute requests)
+	- If the flex interval is too small, the OS might delay execution anyway.
+	- Example: Interval = 1 hour, Flex = 15 minutes. Work will run between **45 min → 60 min** marks of each hour.
+```
+val request = PeriodicWorkRequestBuilder<SyncWorker>(
+    1, TimeUnit.HOURS,        // Repeat interval
+    15, TimeUnit.MINUTES      // Flex interval
+).build()
+```
+
+
+### Worker Types
+The work is defined inside the Worker Class.
+1. Worker
+	- Synchronous
+	- Execute `doWork()` on a background thread.
+	- You will be **blocked** inside `doWork()` until the task finishes.
+	- If you want to call **suspend functions** (like Room, Retrofit, Flow), you have to manually manage coroutines or threads.
+	-  If you try to run coroutines, you must block with `runBlocking` (ugly, error-prone).
+	- You need to manually check if the WorkManager is cancelled.
+	- Good for **short, blocking operations** (like writing a file, simple DB insert).
+	-  Use Worker for:
+		- If you only need Java-style, blocking work.
+		- If your task is short and does not involve suspended APIs.
+		- If you’re in a Java-only codebase.
+2. CoroutineWorker
+	- Asynchronous
+	- Designed for **Kotlin coroutines**.
+	- Uses Coroutine `suspend fun doWork()`
+	- Automatically handles cancellation if WorkManager stops your job. No need to manually check.
+	- Cleaner for Retrofit/Ktor/Room Calls.
+	- Preferred for **long-running network/db operations** in modern apps.
+	- User CoroutineWorker for:
+		- If you use Room (suspend DAO methods).
+		- If you use Retrofit/Ktor with coroutines.
+		- For long-running or async jobs.
+3. RxWorker
+	- For RxJava (less common now).
+
+### Worker Result Handling
+Every worker must end with a result:
+- `success()` → Done, not retried.
+- `retry()` → Temporary error (WorkManager retries with backoff).
+- `failure()` → Hard failure (chain stops).
+
+### Work Chaining
+- If there are works that are dependent on each other, you can chain them.
+- Example: Fetch -> Process -> Upload
+```
+WorkManager.getInstance(context)
+    .beginWith(workFetch)
+    .then(workProcess)
+    .then(workUpload)
+    .enqueue()
+```
+- Note: PeriodicWork cannot be chained.
+
+### Constraints (Battery & Resource Awareness)
+Constraints make work **smart**:
+- `setRequiredNetworkType()` → Only run on WiFi or any network.
+- `setRequiresCharging(true)` → Save battery.
+- `setRequiresDeviceIdle(true)` → Don’t disturb active users.
+- `setRequiresBatteryNotLow(true)` → Prevent drain.
+Note: If constraints are not met, work is **ENQUEUED** and will auto-run later.
+
+### Data Passing (Input/Output)
+- You can pass small data into the worker class.
+- The resulting worker can also pass data.
+- Max size ≈ 10KB. Not for big payloads.
+- Example:
+```
+// Starting WorkManager
+val request = OneTimeWorkRequestBuilder<SyncWorker>()
+    .setInputData(workDataOf("NOTE_ID" to 123))
+    .build()
+
+// Inside Worker
+val id = inputData.getInt("NOTE_ID", -1)
+
+// Returning Results:
+Result.success(workDataOf("SYNC_STATUS" to "done"))
+```
+
+### Unique Work
+- It prevents running duplicate work.
+- WorkManager is given a unique name.
+```
+WorkManager.getInstance(context)
+    .enqueueUniqueWork(
+        "NoteSync",
+        ExistingWorkPolicy.KEEP, // or REPLACE / APPEND
+        request
+    )
+```
+- When you use **`enqueueUniqueWork()`** or **`enqueueUniquePeriodicWork()`**, you give your work a **unique name**.
+- If there’s already work with the same name, you have to tell WorkManager **what to do** with the new request. That’s where `ExistingWorkPolicy` comes in:
+	- **KEEP** → Keep old, ignore new.
+		- If there’s already a work with the same unique name (and it’s **ENQUEUED** or **RUNNING**), the new request is **discarded**.
+		- If the old work is finished, the new work will run normally.
+		- Use **KEEP** for background sync (avoid duplicate jobs).
+	- **REPLACE** → Cancel the old work and start the new one.
+		- Existing work with the same unique name is **cancelled** (even if running).
+		- New work request is **enqueued**.
+		- Use **REPLACE** for the manual "sync now" button.
+	- **APPEND** → Chain a new work after the execution of the old one.
+		- If existing work is still running or enqueued → the new work will wait and run **after the old one finishes**.
+		- If old work is already finished → new work runs immediately.
+		- Only works with **OneTimeWorkRequest** chains (not with `PeriodicWorkRequest`).
+		- Example: user adds multiple "upload image" tasks → each request should wait until the previous one finishes.
+
+### Work States & Lifecycle
+- `ENQUEUED` → Scheduled.
+- `RUNNING` → Currently executing.
+- `SUCCEEDED` → Done.
+- `FAILED` → Permanently failed.
+- `BLOCKED` → Waiting on dependency.
+- `CANCELLED` → Manually cancelled.
+```
+WorkManager.getInstance(context)
+    .getWorkInfoByIdLiveData(request.id)
+    .observe(lifecycleOwner) { info ->
+        when (info?.state) {
+            WorkInfo.State.RUNNING -> showLoading()
+            WorkInfo.State.SUCCEEDED -> showSuccess()
+        }
+    }
+```
+
+### Cancellation
+The following are the ways to cancel work:
+- By `id`
+- By a unique name
+- All work
+```
+WorkManager.getInstance(context).cancelWorkById(request.id)
+```
+
+### When to Use WorkManager
+- For background work that is **guaranteed** to run:
+	- Non-real-time work
+	- Syncing data with the server (offline-first apps).
+	- Uploading logs or analytics.
+	- Sending scheduled notifications.
+	- Cleanup tasks.
+- Not for:
+	- Real-time work (use Foreground Services).
+	- Playing music → needs instant playback (use **Foreground Service**).
+	- Exact timing alarms (use AlarmManager).
+	- Bluetooth device input → needs **real-time listeners**.
+
+### How It Works Inside WorkManager
+The reason why WorkManager is **guaranteed** → because of the following persistence layer:
+- Work is stored in an **internal SQLite DB**.
+- Worker states & constraints are tracked persistently.
+- If app/device restarts → SQLite DB reloads → resumes pending work.
+- Uses OS schedulers:
+	- JobScheduler (preferred)
+	- AlarmManager + BroadcastReceiver (fallback)
+
+
+LifeCycle of WorkManager
+
+**WorkManager vs Foreground Service vs AlarmManager**
