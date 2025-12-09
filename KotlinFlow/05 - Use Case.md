@@ -1,4 +1,3 @@
-
 ### Use Case: Displaying User Input and Showing a Toast on Submit
 ##### Requirements:
 - Track current user input (like in a search field).
